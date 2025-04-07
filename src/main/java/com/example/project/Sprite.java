@@ -25,7 +25,19 @@ public class Sprite {
 
     public void move(String direction) { //you can leave this empty
         // Default behavior (can be overridden by subclasses)
-
+        //Set (x,y) with WASD
+        if(direction.equals("w")){
+            setY(getY() + 1);
+        }
+        else if(direction.equals("a")){
+            setX(getX() - 1);
+        }
+        else if(direction.equals("s")){
+            setY(getY() - 1);
+        }
+        else if(direction.equals("d")){
+            setX(getX() + 1);
+        }
     }
 
     public void interact() { //you can leave this empty

@@ -1,4 +1,5 @@
 package com.example.project;
+import java.util.*;
 import java.util.Scanner;
 
 public class Game{
@@ -8,9 +9,9 @@ public class Game{
     private Treasure[] treasures;
     private Trophy trophy;
     private int size; 
-    private Treasure treasure;
 
     public Game(int size){ //the constructor should call initialize() and play()
+        initialize(); //intialize the game upon creation
     }
 
     public static void clearScreen() { //do not modify
@@ -31,108 +32,133 @@ public class Game{
 
     public void play(){ //write your game logic here
         Scanner scanner = new Scanner(System.in);
+        String input = "";
 
         while(true){
-            grid.display();
+            //gameplay
+            if(player.getWin() == false && player.getLives() > 0){
+                //display and input
+                grid.display();
+                System.out.println(player.getCoords());
+                System.out.println(player.getRowCol(size));
+                System.out.println("Treasure collected: " + player.getTreasureCount());
+                System.out.println("Lives remaining: " + player.getLives());
+                System.out.print("Enter a direction (w,a,s,d) or 'q' to exit: ");
+                input = scanner.next();
+
+                if(input.equals("q")){
+                    return;
+                }
+
+                if(player.isValid(size, input)){
+                    player.interact(size, input, treasures.length, grid.getGrid()[size - 1- player.getY()][player.getX()]);
+                    // Player
+                    player.move(input);
+                    player.interact(size, input, treasures.length, grid.getGrid()[size - 1- player.getY()][player.getX()]);
+                    //Player
+                    grid.placeSprite(player, input);
+                }
+            }
+            // if lose
+            else if (player.getWin() == false && player.getLives() == 0){
+                grid.gameover();
+                System.out.print("Play again? y or n: ");
+                input = scanner.next();
+                if(input.equals("y")){
+                    initialize();
+                }
+                return;
+            }
+            // win
+            else if (player.getWin() == true){
+                grid.win();
+                System.out.print("Play again? y or n: ");
+                input = scanner.next();
+                if(input.equals("y")){
+                    initialize();
+                }
+                return;
+            }
+            
+            // update
             try {
                 Thread.sleep(100); // Wait for 1/10 seconds
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             clearScreen(); // Clear the screen at the beggining of the while loop
-
-     
-            }
+        }
     }
 
     public void initialize(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Choose easy, medium, or hard difficultly: ");
+        String choice = scanner.nextLine();
 
-        //to test, create a player, trophy, grid, treasure, and enemies. Then call placeSprite() to put them on the grid
-        int size = 10;
-        grid = new Grid(size);
+        // presets based on difficulty
+        if(choice.equals("easy")){
+            size = 10;
+            grid = new Grid(size);
+            generate(2);
+        }
+        else if(choice.equals("medium")){
+            size = 15;
+            grid = new Grid(size);
+            generate(3);
+        }
+        else if(choice.equals("hard")){
+            size = 20;
+            grid = new Grid(size);
+            generate(4);
+        }
+
+        play();
+    }
+
+    public void generate(int amount){
+        enemies = new Enemy[amount];
+        treasures = new Treasure[amount];
         player = new Player(0, 0);
-        treasure = new Treasure(2, 2);
-        grid.placeSprite(treasure);
+        trophy = new Trophy((int) (Math.random() * size), (int) (Math.random() * size));
         grid.placeSprite(player);
+        grid.placeSprite(trophy);
+
+        // set enemies random position not overlapping
+        for(int i = 0; i < enemies.length; i++){
+            boolean uniquePos = false;
+
+            while(uniquePos == false){
+                int tempX = (int) (Math.random() * size);
+                int tempY = (int) (Math.random() * size);
+                uniquePos = true;
+
+                if(grid.getGrid()[size - 1 - tempY][tempX] instanceof Dot){
+                    grid.placeSprite(new Enemy(tempX, tempY));
+                    uniquePos = true;
+                }
+            }
+        }
+
+        //set treasures random position not overlapping
+        for(int i = 0; i < treasures.length; i++){
+            boolean uniquePos = false;
+
+            while(uniquePos == false){
+                int tempX = (int) (Math.random() * size);
+                int tempY = (int) (Math.random() * size);
+                uniquePos = true;
+
+                if(grid.getGrid()[size - 1 - tempY][tempX] instanceof Dot){
+                    grid.placeSprite(new Treasure(tempX, tempY));
+                    uniquePos = true;
+                }
+            }
+        }
+
+
     }
 
-    public void test(){
-        grid.display();
-        System.out.println();
-        player.move("w");//[8][0]
-
-        player.move("w");//[7][0]
-        player.move("d");//[7][1]   
-
-        player.interact(10, "d", 2, treasure);
-        player.move("d");//[7][2] // treasure 
-        grid.placeSprite(player, "d");
-        grid.display();
-        System.out.println();
-
-        player.move("w"); //[6][2]
-        grid.placeSprite(player,"w");
-        grid.display();
-        System.out.println(grid.getGrid()[2][2].getClass());
-    }
     public static void main(String[] args) {
         Game test = new Game(10);
-        test.initialize();
-        test.test();
-        // int size = 10;
-        // Grid grid = new Grid(size);
-        // Player player = new Player(0, 0);
-        // Enemy enemy = new Enemy(5, 5);
-        // Enemy enemy2 = new Enemy(7,8);
-        // Treasure treasure = new Treasure(2, 2);
-        // Treasure treasure2 = new Treasure(1,7);
-        // Trophy trophy = new Trophy(9, 9);
-
-        // grid.placeSprite(player);
-        // grid.placeSprite(enemy);
-        // grid.placeSprite(enemy2);
-        // grid.placeSprite(treasure);
-        // grid.placeSprite(treasure2);
-        // grid.placeSprite(trophy);
-        // grid.display();
-
-        // for(int i=0;i<5;i++){
-        //     player.move("w"); //[9-5][0]
-        //     grid.placeSprite(player, "w");
-        // }
-
-        // for(int i=0;i<4;i++){
-        //     player.move("d");//[5][4]
-        //     grid.placeSprite(player, "d");
-        // }
-
-        //  // Interact with the enemy
-        // player.interact(10, "d", 1, enemy);
-        // player.move("d");//[4][5]
-        // grid.placeSprite(player, "d"); for(int i=0;i<5;i++){
-        //     player.move("w"); //[9-5][0]
-        //     grid.placeSprite(player, "w");
-        // }
-
-        // for(int i=0;i<4;i++){
-        //     player.move("d");//[5][4]
-        //     grid.placeSprite(player, "d");
-        // }
-
-        //  // Interact with the enemy
-        // player.interact(10, "d", 1, enemy);
-        // player.move("d");//[4][5]
-        // grid.placeSprite(player, "d");
-
-        // player.move("w");//[3][5]
-        // player.move("w");//[2][5]
-        // player.move("d");//[2][6]
-
-        // player.interact(10,"d",1,enemy2);
-        // player.move("d");//[2][7]
-        // grid.placeSprite(player,"d");
-
-        // grid.display();
-        // System.out.println(player.getLives());
     }
 }
